@@ -15,21 +15,52 @@ npx create-sst@latest
 
 - ? You are in a Next.js project so SST will be setup in drop-in mode. Continue? `Yes`
 
+Install the sst npm package in your project's root:
+```bash
+npm i sst --save-exact
+```
+
+Install the front-end dependencies:
+```bash
+npm i @emotion/react @emotion/styled react-infinite-scroll-component react-beautiful-dnd react-dropzone
+```
+
+Install the AWS dependencies:
+```bash
+npm i amazon-cognito-identity-js
+```
+
+Install dev-dependencies:
+```bash
+npm i --save  @types/react-beautiful-dnd
+```
+
+
 ## Step 2: Start the SST dev server
 
+**Using the `dev` stage for local development:**
+- It is recommended that you use a different stage for development. 
+- Read more from SST here: https://docs.sst.dev/live-lambda-development
+
 ```bash
-npx sst dev
+npx sst dev --stage dev 
 ```
+
 This might take awhile if happening for the first time. Keep it running if this prints out:
-```
+```bash
 ⠼ Deploying bootstrap stack, this only needs to happen once
+```
+
+Wait for it to ultimately print:
+```bash
+Start Next.js: npm run dev
 ```
 
 ## Step 3: Start the local dev server
 
-Install the sst npm package in your project root.
+In another tab in your terminal, run:
 ```bash
-npm i sst --save-exact
+Start Next.js: npm run dev
 ```
 
 
