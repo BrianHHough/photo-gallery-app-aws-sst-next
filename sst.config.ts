@@ -1,5 +1,5 @@
 import { SSTConfig } from "sst";
-import { NextjsSite, Api, Cognito, Bucket} from "sst/constructs";
+import { NextjsSite, Api, Cognito, Bucket, Table } from "sst/constructs";
 import { Tags } from "aws-cdk-lib";
 
 // Global variables
@@ -44,8 +44,28 @@ export default {
         login: ["email"],
       });
 
+
       // =================================== //
-      //   Create an API Gateway REST API    //
+      //      Configure DynamoDB Table       //
+      // =================================== //
+      const photoGalleryTable = new Table(stack, "PhotoGalleryTable", {
+        fields: {
+          id: "string",
+          order: "number",
+          fileName: "string",
+          imageUrl: "string",
+          description: "string",
+          uuid: "string"
+        },
+        primaryIndex: { partitionKey: "id", sortKey: "order" },
+        globalIndexes: {
+          OrderIndex: { partitionKey: "order" } // Need to query by PK
+        }
+      });
+
+
+      // =================================== //
+      //   Create an API Gateway HTTP API    //
       // =================================== //
       const api = new Api(stack, "Api", {
         authorizers: {
@@ -62,13 +82,54 @@ export default {
           authorizationScopes: ["user.email"]
         },
         routes: {
-          "GET /photos": "functions/listPhotos.main",
+          "GET /photos": {
+            function: {
+              handler: "app/api/photos/list/route.main",
+              environment: {
+                TABLE_NAME: photoGalleryTable.tableName,
+              }
+            },
+          },
+          "GET /admin/presign": {
+            authorizer: "iam",
+            function: {
+              handler: "app/api/photos/presign/route.main",
+              environment: {
+                BUCKET_NAME: photoBucket.bucketName,
+              },
+            },
+          },
           "POST /admin/upload": {
             authorizer: "cognitoAuthorizer",
-            function: "functions/upload.main"
+            function: {
+              handler: "app/api/photos/upload/route.main",
+              environment: {
+                TABLE_NAME: photoGalleryTable.tableName,
+                BUCKET_NAME: photoBucket.bucketName,
+              }
+            },
           },
+          "DELETE /admin/delete": {
+            authorizer: "cognitoAuthorizer",
+            function: {
+              handler: "app/api/photos/delete/route.main",
+              environment: {
+                TABLE_NAME: photoGalleryTable.tableName,
+                BUCKET_NAME: photoBucket.bucketName,
+              }
+            },
+          }
         },
       });
+
+
+      // =================================== //
+      //     Add Permissions to Resources    //
+      // =================================== //
+      // Let photos/upload access: DynamoDB -- for photos
+      api.getFunction("GET /photos")?.attachPermissions([photoGalleryTable]);
+      // Let photos/upload access: DynamoDB, S3 -- for photos
+      api.getFunction("POST /admin/upload")?.attachPermissions([photoGalleryTable, photoBucket]);
 
 
 
@@ -89,6 +150,7 @@ export default {
         UserPoolId: auth.userPoolId,
         IdentityPoolId: auth.cognitoIdentityPoolId,
         UserPoolClientId: auth.userPoolClientId,
+        TableName: photoGalleryTable.tableName,
       });
       // =================================== //
       //        Customize Stack Name         //

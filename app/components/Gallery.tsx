@@ -1,13 +1,14 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import styled from '@emotion/styled';
-// import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
+import Link from 'next/link';
 
 interface Photo {
   id: string;
   url: string;
   description: string;
+  order: number;
 }
 
 const GalleryContainer = styled.div`
@@ -36,26 +37,28 @@ const Gallery: React.FC = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
 
   const fetchPhotos = async (startKey: Record<string, any> | undefined = undefined) => {
-    // const dbClient = new DynamoDBClient({ region: 'us-east-1' });
-    // const command = new ScanCommand({
-    //   TableName: 'Photos',
-    //   ExclusiveStartKey: startKey,
-    //   Limit: 30,
-    // });
+    try {
+      const response = await fetch('/api/photos/list');
+      const data = await response.json();
+      console.log('data', data);
 
-    // try {
-    //   const response = await dbClient.send(command);
-    //   const newPhotos: Photo[] = response.Items?.map((item) => ({
-    //     id: item.id.S ?? '',
-    //     url: item.url.S ?? '',
-    //     description: item.description.S ?? '',
-    //   })) || [];
+      if (response.ok) {
+        // Filter out duplicates
+        const uniquePhotos = data.photos.filter((newPhoto: Photo) =>
+          !photos.some(photo => photo.id === newPhoto.id)
+        );
 
-    //   setPhotos((prevPhotos) => [...prevPhotos, ...newPhotos]);
-    //   setHasMore(!!response.LastEvaluatedKey);
-    // } catch (error) {
-    //   console.error('Error fetching photos:', error);
-    // }
+        // setPhotos((prevPhotos) => [...prevPhotos, ...uniquePhotos]);
+        setPhotos(data.photos);
+        setHasMore(data.photos.length > 0);
+      } else {
+        console.error('Error fetching photos:', data.message);
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error fetching photos:', error);
+      setHasMore(false);
+    }
   };
 
   useEffect(() => {
@@ -65,10 +68,14 @@ const Gallery: React.FC = () => {
   return (
     <InfiniteScroll
       dataLength={photos.length}
-      next={() => fetchPhotos(photos[photos.length - 1]?.id ? { id: { S: photos[photos.length - 1].id } } : undefined)}
+      next={() => fetchPhotos()}
       hasMore={hasMore}
-      loader={<h4>Loading...</h4>}
-      endMessage={<p style={{ textAlign: 'center' }}>No more photos</p>}
+      loader={!photos.length && <h4>Loading...</h4>}
+      endMessage={
+        <Link href="/admin">
+          <p style={{ textAlign: 'center' }}>No photos found... Let&rsquo;s upload a photo 👀</p>
+        </Link>
+      }
     >
       <GalleryContainer>
         {photos.map((photo) => (
