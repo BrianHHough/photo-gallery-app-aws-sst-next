@@ -109,16 +109,16 @@ export default {
               }
             },
           },
-          "DELETE /admin/delete": {
-            authorizer: "cognitoAuthorizer",
-            function: {
-              handler: "app/api/photos/delete/route.main",
-              environment: {
-                TableName: photoGalleryTable.tableName,
-                BUCKET_NAME: photoBucket.bucketName,
-              }
-            },
-          }
+          // "DELETE /admin/delete": {
+          //   authorizer: "cognitoAuthorizer",
+          //   function: {
+          //     handler: "app/api/photos/delete/route.main",
+          //     environment: {
+          //       TableName: photoGalleryTable.tableName,
+          //       BUCKET_NAME: photoBucket.bucketName,
+          //     }
+          //   },
+          // }
         },
       });
 

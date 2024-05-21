@@ -1,6 +1,7 @@
-"use client"
+"use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CognitoUserPool, CognitoUser, AuthenticationDetails, CognitoUserSession } from 'amazon-cognito-identity-js';
+import { UserPoolId, UserPoolClientId } from '@/utils/app';
 
 // Types for the context
 interface AuthContextType {
@@ -13,8 +14,8 @@ interface AuthContextType {
 
 // Cognito pool data
 const poolData = {
-  UserPoolId: 'us-east-1_v7tgjgn6q',
-  ClientId: '1nit66nr57fuh9j64hsnicpnrl',
+  UserPoolId: UserPoolId!,
+  ClientId: UserPoolClientId!,
 };
 const userPool = new CognitoUserPool(poolData);
 
@@ -43,19 +44,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem('sessionToken', token);
             // Fetch user details
             user.getUserAttributes((err, attributes) => {
-                if (err) {
-                  console.error(err);
-                  setUserDetails(null); // Set to null on error
-                } else if (attributes) {
-                  const details = attributes.reduce((acc, attribute) => {
-                    acc[attribute.getName()] = attribute.getValue();
-                    return acc;
-                  }, {} as { [key: string]: any });
-                  setUserDetails(details);
-                } else {
-                  setUserDetails(null); // Set to null if no attributes are found
-                }
-              });
+              if (err) {
+                console.error(err);
+                setUserDetails(null); // Set to null on error
+              } else if (attributes) {
+                const details = attributes.reduce((acc, attribute) => {
+                  acc[attribute.getName()] = attribute.getValue();
+                  return acc;
+                }, {} as { [key: string]: any });
+                setUserDetails(details);
+              } else {
+                setUserDetails(null); // Set to null if no attributes are found
+              }
+            });
           } else {
             logoutUser(); // Clean up if session is invalid
           }
@@ -81,7 +82,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const token = result.getIdToken().getJwtToken();
           setUserToken(token);
           localStorage.setItem('sessionToken', token);
-          resolve();
+          // Fetch user details
+          user.getUserAttributes((err, attributes) => {
+            if (err) {
+              console.error(err);
+              setUserDetails(null); // Set to null on error
+            } else if (attributes) {
+              const details = attributes.reduce((acc, attribute) => {
+                acc[attribute.getName()] = attribute.getValue();
+                return acc;
+              }, {} as { [key: string]: any });
+              setUserDetails(details);
+              resolve();
+            } else {
+              setUserDetails(null); // Set to null if no attributes are found
+              resolve();
+            }
+          });
         },
         onFailure: (err) => {
           console.error(err);
@@ -103,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user.signOut();
       setIsAuthenticated(false);
       setUserToken(null);
+      setUserDetails(null);
       localStorage.removeItem('sessionToken');
     }
   };

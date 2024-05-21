@@ -1,8 +1,8 @@
 import { AuthenticationDetails, CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
 
 const poolData = {
-  UserPoolId: 'us-east-1_v7tgjgn6q', // Your UserPoolId here
-  ClientId: '1nit66nr57fuh9j64hsnicpnrl', // Your UserPoolClientId here
+  UserPoolId: process.env.NEXT_PUBLIC_UserPoolId!, // Your UserPoolId here
+  ClientId: process.env.NEXT_PUBLIC_UserPoolClientId!, // Your UserPoolClientId here
 };
 
 interface NewPasswordCallback {

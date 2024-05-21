@@ -143,6 +143,7 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ onFilesAdded }) => {
         }
   
         const { presignedUrl } = await response.json();
+        console.log('presignedUrl', presignedUrl);
   
         // Upload the file to S3 using the presigned URL
         await fetch(presignedUrl, {
@@ -150,6 +151,7 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ onFilesAdded }) => {
           body: file,
           headers: {
             'Content-Type': file.type,
+            'Content-Disposition': `attachment; filename="${file.name}"`,
           },
         });
   

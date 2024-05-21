@@ -1,40 +1,52 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
-import * as AWS from 'aws-sdk';
+import { NextRequest, NextResponse } from 'next/server';
+import { DynamoDBClient, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
+import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
-const s3 = new AWS.S3();
+const dynamoDb = new DynamoDBClient({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: process.env.AWS_REGION });
 const TABLE_NAME = process.env.TABLE_NAME || '';
 const BUCKET_NAME = process.env.BUCKET_NAME || '';
 
-export const deletePhoto: APIGatewayProxyHandler = async (event) => {
-  const { id } = JSON.parse(event.body || '{}');
-  
-  // Delete from DynamoDB
-  const deleteParams = {
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json();
+  console.log('Received delete request for id:', id);
+
+  if (!id) {
+    return NextResponse.json({ message: 'ID is required' }, { status: 400 });
+  }
+
+  const deleteDynamoDbParams = {
     TableName: TABLE_NAME,
-    Key: { id },
+    Key: {
+      id: { S: id }
+    }
   };
-  
-  // Delete from S3
+
   const deleteS3Params = {
     Bucket: BUCKET_NAME,
-    Key: id,  // Assuming the S3 key matches the DynamoDB id
+    Key: id,
   };
 
   try {
     await Promise.all([
-      dynamoDb.delete(deleteParams).promise(),
-      s3.deleteObject(deleteS3Params).promise()
+      dynamoDb.send(new DeleteItemCommand(deleteDynamoDbParams)),
+      s3.send(new DeleteObjectCommand(deleteS3Params))
     ]);
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: "Photo deleted successfully" }),
-    };
+
+    return NextResponse.json({ message: 'Photo deleted successfully' });
   } catch (error) {
     console.error('Delete operation failed:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Failed to delete photo", error }),
-    };
+    return NextResponse.json({ message: 'Failed to delete photo', error: error }, { status: 500 });
   }
-};
+}
+
+// export default function handler(req: NextRequest) {
+//   switch (req.method) {
+//     case 'DELETE':
+//       return DELETE(req);
+//     case 'GET':
+//       return GET(req);
+//     default:
+//       return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
+//   }
+// }
