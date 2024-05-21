@@ -8,7 +8,7 @@ import { StyledContainer } from './ContainerElements'
 const Container = () => {
   return (
     <StyledContainer>
-        <h1>Photo Gallery</h1>
+        <h1>My Serverless Photo Gallery</h1>
         <Gallery/>
     </StyledContainer>
   )

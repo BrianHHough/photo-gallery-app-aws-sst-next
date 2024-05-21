@@ -10,6 +10,8 @@ interface AuthContextType {
   userDetails: { [key: string]: any } | null; // Store user details as an object
   loginUser: (email: string, password: string) => Promise<void>;
   logoutUser: () => void;
+  newPasswordRequired: boolean;
+  completeNewPasswordChallenge: (newPassword: string) => Promise<void>;
 }
 
 // Cognito pool data
@@ -26,6 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userToken, setUserToken] = useState<string | null>(null);
   const [userDetails, setUserDetails] = useState<{ [key: string]: any } | null>(null);
+  const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
+  const [newPasswordRequired, setNewPasswordRequired] = useState(false);
 
   // Check current session
   useEffect(() => {
@@ -105,9 +109,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           reject(err);
         },
         newPasswordRequired: (userAttributes, requiredAttributes) => {
-          // Handle new password requirement here if needed
-          console.log('New password required', userAttributes, requiredAttributes);
+          setCognitoUser(user);
+          setNewPasswordRequired(true);
           reject(new Error('New password required'));
+        },
+      });
+    });
+  };
+
+  const completeNewPasswordChallenge = async (newPassword: string) => {
+    if (!cognitoUser) {
+      throw new Error('No user in new password challenge');
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
+        onSuccess: (result) => {
+          setIsAuthenticated(true);
+          const token = result.getIdToken().getJwtToken();
+          setUserToken(token);
+          localStorage.setItem('sessionToken', token);
+          userPool.getCurrentUser()?.getUserAttributes((err, attributes) => {
+            if (err) {
+              console.error(err);
+              setUserDetails(null);
+            } else if (attributes) {
+              const details = attributes.reduce((acc, attribute) => {
+                acc[attribute.getName()] = attribute.getValue();
+                return acc;
+              }, {} as { [key: string]: any });
+              setUserDetails(details);
+              setNewPasswordRequired(false);
+              setCognitoUser(null);
+              resolve();
+            } else {
+              setUserDetails(null);
+              setNewPasswordRequired(false);
+              setCognitoUser(null);
+              resolve();
+            }
+          });
+        },
+        onFailure: (err) => {
+          console.error(err);
+          reject(err);
         },
       });
     });
@@ -126,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userToken, userDetails, loginUser, logoutUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, userToken, userDetails, loginUser, logoutUser, newPasswordRequired, completeNewPasswordChallenge }}>
       {children}
     </AuthContext.Provider>
   );

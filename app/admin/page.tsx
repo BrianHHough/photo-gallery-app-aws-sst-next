@@ -4,7 +4,6 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import ImageDropzone from '../components/Dropzone';
 import { StyledContainer } from '../components/ContainerElements';
 import { useAuth } from '../api/auth/AuthContext';
-import SSTUpload from '../test/page';
 
 interface Photo {
   id: string;
@@ -22,17 +21,18 @@ const logOutButton: CSSProperties = {
   left: '50%',
   transform: 'translateX(-50%)',
   marginBottom: '20px',
+  bottom: 0,
+  position: 'absolute'
 }
 
 const Admin: React.FC = () => {
-  const { userDetails, loginUser, logoutUser, isAuthenticated } = useAuth();
-  console.log('userDetails', userDetails);
-
+  const { isAuthenticated, loginUser, logoutUser, newPasswordRequired, completeNewPasswordChallenge, userDetails } = useAuth();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [newPhotoDescription, setNewPhotoDescription] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -71,6 +71,18 @@ const Admin: React.FC = () => {
     }
   };
 
+  const handleNewPasswordSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    try {
+      await completeNewPasswordChallenge(newPassword);
+      alert('Password reset successful. You can now log in with your new password.');
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Failed to reset password: ' + (error as Error).message);
+    }
+  };
+
   return (
     <StyledContainer>
       <h1>{userDetails ? 'Edit My Photo Gallery' : 'Admin | Photo Gallery'}</h1>
@@ -106,6 +118,16 @@ const Admin: React.FC = () => {
             Log Out
           </button>
         </>
+      ) : newPasswordRequired ? (
+        <form onSubmit={handleNewPasswordSubmit}>
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <button type="submit">Set New Password</button>
+        </form>
       ) : (
         <form onSubmit={handleSignIn}>
           <input

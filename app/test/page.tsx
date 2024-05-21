@@ -38,6 +38,8 @@ const SSTUpload: React.FC = () => {
 
   return (
     <main>
+      <h1>Testing upload from SST</h1>
+      <br></br>
       <form onSubmit={handleSubmit}>
         <input name="file" type="file" accept="image/png, image/jpeg" required />
         <button type="submit">Upload</button>
