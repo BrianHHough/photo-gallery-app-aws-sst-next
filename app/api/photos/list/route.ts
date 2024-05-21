@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
     // photos.sort((a, b) => a.order - b.order);
 
     // console.log('photos', photos)
+    console.log('hiiiii')
 
     return NextResponse.json({ photos });
   } catch (error) {

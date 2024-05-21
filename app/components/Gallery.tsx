@@ -48,6 +48,8 @@ const Gallery: React.FC = () => {
           !photos.some(photo => photo.id === newPhoto.id)
         );
 
+        console.log('data.photos', data.photos)
+
         // setPhotos((prevPhotos) => [...prevPhotos, ...uniquePhotos]);
         setPhotos(data.photos);
         setHasMore(data.photos.length > 0);

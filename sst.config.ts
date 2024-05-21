@@ -22,7 +22,7 @@ export default {
       // =================================== //
       //      Create a CDN for the App       //
       // =================================== //
-      const site = new NextjsSite(stack, "site");
+      const site = new NextjsSite(stack, "site"); 
 
       // Customize CloudFront settings
       // customDomain: {
@@ -86,7 +86,7 @@ export default {
             function: {
               handler: "app/api/photos/list/route.main",
               environment: {
-                TABLE_NAME: photoGalleryTable.tableName,
+                TableName: photoGalleryTable.tableName,
               }
             },
           },
@@ -104,7 +104,7 @@ export default {
             function: {
               handler: "app/api/photos/upload/route.main",
               environment: {
-                TABLE_NAME: photoGalleryTable.tableName,
+                TableName: photoGalleryTable.tableName,
                 BUCKET_NAME: photoBucket.bucketName,
               }
             },
@@ -114,7 +114,7 @@ export default {
             function: {
               handler: "app/api/photos/delete/route.main",
               environment: {
-                TABLE_NAME: photoGalleryTable.tableName,
+                TableName: photoGalleryTable.tableName,
                 BUCKET_NAME: photoBucket.bucketName,
               }
             },
