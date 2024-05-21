@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   console.log('command', command)
 
   try {
-    const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
     console.log('Generated presigned URL:', presignedUrl);
     return NextResponse.json({ presignedUrl });
   } catch (error) {
