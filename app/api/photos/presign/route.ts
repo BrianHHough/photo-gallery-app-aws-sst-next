@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   console.log('command', command)
 
   try {
-    const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+    const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
     console.log('Generated presigned URL:', presignedUrl);
     return NextResponse.json({ presignedUrl });
   } catch (error) {
@@ -38,10 +38,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export default function handler(req: NextRequest) {
-  if (req.method === 'GET') {
-    return GET(req);
-  } else {
-    return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
-  }
-}
+// export default function handler(req: NextRequest) {
+//   if (req.method === 'GET') {
+//     return GET(req);
+//   } else {
+//     return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
+//   }
+// }
