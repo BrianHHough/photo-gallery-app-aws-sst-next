@@ -1,13 +1,13 @@
 "use client"
-import { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-// import { signIn, signUp } from '@/app/services/api';
-// import { DynamoDBClient, PutItemCommand, ScanCommand, BatchWriteItemCommand } from '@aws-sdk/client-dynamodb';
+import { useCallback, useEffect, useState } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import ImageDropzone from '../components/Dropzone';
 import { StyledContainer } from '../components/ContainerElements';
 
 // Login elements
 import { AuthenticationDetails, CognitoUserPool, CognitoUser, CognitoUserSession } from 'amazon-cognito-identity-js';
 import { loginUser, signOutUser } from '@/app/api/auth/[...auth]';
+import { useAuth } from '../api/auth/AuthContext';
 
 interface Photo {
   id: string;
@@ -18,11 +18,14 @@ interface Photo {
 const poolData = {
     UserPoolId: 'us-east-1_v7tgjgn6q', // From your Cognito setup
     ClientId: '1nit66nr57fuh9j64hsnicpnrl', // From your Cognito setup
-};    
+};
 
 const userPool = new CognitoUserPool(poolData);
 
 const Admin: React.FC = () => {
+  const { userDetails } = useAuth();
+  console.log('userDetails', userDetails)
+
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [newPhotoDescription, setNewPhotoDescription] = useState('');
@@ -33,9 +36,7 @@ const Admin: React.FC = () => {
 //   const dbClient = new DynamoDBClient({ region: 'us-east-1' });
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchPhotos();
-    }
+    isAuthenticated && fetchPhotos();
   }, [isAuthenticated]);
 
   const fetchPhotos = async () => {
@@ -52,7 +53,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleOnDragEnd = (result: any) => {
+  const handleOnDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const items = Array.from(photos);
@@ -60,8 +61,14 @@ const Admin: React.FC = () => {
     items.splice(result.destination.index, 0, reorderedItem);
 
     setPhotos(items);
-    updatePhotoOrder(items);
+    // Consider implementing updatePhotoOrder on the backend
   };
+
+  const onFilesAdded = useCallback((addedFiles: File[]) => {
+    // Placeholder for actual upload logic
+    console.log(addedFiles);
+    // Here you would handle the logic to upload files and fetch their URLs, then update the photo state.
+  }, []);
 
   const updatePhotoOrder = async (photos: Photo[]) => {
     try {
@@ -160,37 +167,20 @@ const Admin: React.FC = () => {
 
   return (
     <StyledContainer>
-      <h1>Admin | Photo Gallery</h1>
-      {isAuthenticated ? (
+      <h1>{ userDetails ? "Edit My Photo Gallery" : "Admin | Photo Gallery"}</h1>
+      {userDetails ? (
         <>
-          <input
-            type="text"
-            placeholder="Photo URL"
-            value={newPhotoUrl}
-            onChange={(e) => setNewPhotoUrl(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Photo Description"
-            value={newPhotoDescription}
-            onChange={(e) => setNewPhotoDescription(e.target.value)}
-          />
-          <button onClick={addNewPhoto}>Add Photo</button>
-
+          <ImageDropzone onFilesAdded={onFilesAdded} />
           <DragDropContext onDragEnd={handleOnDragEnd}>
             <Droppable droppableId="photos">
               {(provided) => (
                 <div {...provided.droppableProps} ref={provided.innerRef}>
-                  {photos.map(({ id, url, description }, index) => (
-                    <Draggable key={id} draggableId={id} index={index}>
+                  {photos.map((photo, index) => (
+                    <Draggable key={photo.id} draggableId={photo.id} index={index}>
                       {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <img src={url} alt={description} />
-                          <p>{description}</p>
+                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                          <img src={photo.url} alt={photo.description} />
+                          <p>{photo.description}</p>
                         </div>
                       )}
                     </Draggable>
@@ -201,30 +191,30 @@ const Admin: React.FC = () => {
             </Droppable>
           </DragDropContext>
 
-            <button onClick={() => {
-                signOutUser();
-                setIsAuthenticated(false);
-            }}>
-                Log Out
-            </button>
+          <button onClick={() => {
+            // Placeholder for actual sign out logic
+            setIsAuthenticated(false);
+          }}>
+            Log Out
+          </button>
         </>
       ) : (
         <>
-            <form onSubmit={handleSignIn}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <button type="submit">Sign In</button>
-            </form>
+          <form onSubmit={handleSignIn}>
+              <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+              />
+              <button type="submit">Sign In</button>
+          </form>
         </>
       )}
     </StyledContainer>

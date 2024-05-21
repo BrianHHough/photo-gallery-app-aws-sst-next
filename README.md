@@ -22,15 +22,20 @@ npm i sst --save-exact
 
 Install the front-end dependencies:
 ```bash
-npm i @emotion/react @emotion/styled react-infinite-scroll-component react-beautiful-dnd react-dropzone
+npm i @emotion/react @emotion/styled react-infinite-scroll-component @hello-pangea/dnd react-dropzone
 ```
 
 Install the AWS dependencies:
 ```bash
-npm i amazon-cognito-identity-js
+npm i amazon-cognito-identity-js @aws-sdk/client-s3 @aws-sdk/s3-request-presigner @aws-sdk/client-dynamodb uuid
 ```
 
-Install dev-dependencies:
+Install the AWS dev dependencies:
+```bash
+npm i --save-dev @types/aws-lambda @types/uuid
+```
+
+Install front-end dev-dependencies:
 ```bash
 npm i --save  @types/react-beautiful-dnd
 ```
@@ -64,7 +69,7 @@ Start Next.js: npm run dev
 ```
 
 
-## Step: Deploy to AWS
+## Step 4: Deploy to AWS
 
 ```bash
 npx sst deploy --stage prod --profile BHH-AmplifyAdminAccess
@@ -114,16 +119,38 @@ Require stack:
 
 # ❌ Serverless Framework Components - Did not work....
 
-Install serverless components cli:
+Tried to install serverless components cli but it did not upload: https://github.com/serverless-nextjs/serverless-next.js/issues/2320
+
 ```bash
 npm install -g @serverless/cli
 ```
 
-
 - Deploy locally with:
 ```bash
-serverless --aws-profile BHH-AmplifyAdminAccess
+components-v1 --aws-profile XXXXXX
 ```
+
+## Also, issue with Lambda zip size
+https://stackoverflow.com/questions/59931761/unzipped-size-must-be-smaller-than-262144000-bytes-aws-lambda-error
+
+
+
+# ❌ Using `@hello-pangea/dnd` instead of `react-beautiful-dnd`
+`react-beautiful-dnd` has issues with React 18, especially when React's strict mode is enabled, which is the default in Next.js. The library hasn't been maintained to support the new features and strict mode of React 18.
+
+The fork `@hello-pangea/dnd` is a maintained alternative that fixes these issues and is compatible with React 18. It should be a drop-in replacement for `react-beautiful-dnd`. Here’s how you can use `@hello-pangea/dnd` in a project:
+
+```bash
+npm install @hello-pangea/dnd --save
+```
+
+Source: https://www.reddit.com/r/nextjs/comments/17vq0rm/reactbeautifuldnd/
+
+
+# Issue with route handler methods:
+
+https://github.com/vercel/next.js/discussions/47072
+
 
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
