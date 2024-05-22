@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     const command = new PutObjectCommand({
-    //   ACL: 'public-read',
+      ACL: 'public-read',
       Bucket: BUCKET_NAME!,
       Key: file.name,
       Body: buffer,
