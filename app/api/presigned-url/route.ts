@@ -1,34 +1,36 @@
-// TESTING
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import crypto from 'crypto';
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: process.env.AWSRegion });
 const BUCKET_NAME = process.env.BucketName;
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
+
+    if (!file) {
+      return NextResponse.json({ message: 'File is required' }, { status: 400 });
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     const command = new PutObjectCommand({
-      ACL: 'public-read',
-      Key: crypto.randomUUID(),
+    //   ACL: 'public-read',
       Bucket: BUCKET_NAME!,
+      Key: file.name,
+      Body: buffer,
+      ContentType: file.type,
     });
-    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
-    return NextResponse.json({ url }, { status: 200 });
+    await s3.send(command);
+
+    const fileUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${file.name}`;
+
+    return NextResponse.json({ url: fileUrl }, { status: 200 });
   } catch (error) {
-    console.error('Error creating presigned URL', error);
-    return NextResponse.json({ message: 'Failed to create presigned URL', error }, { status: 500 });
+    console.error('Error uploading file', error);
+    return NextResponse.json({ message: 'Failed to upload file', error }, { status: 500 });
   }
 }
-
-export function handler(req: NextRequest) {
-  if (req.method === 'GET') {
-    return GET(req);
-  } else {
-    return NextResponse.json({ message: `Method ${req.method} Not Allowed` }, { status: 405 });
-  }
-}
-
-export default handler;
