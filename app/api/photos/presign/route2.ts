@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: "us-east-1" });
 const BUCKET_NAME = process.env.BucketName;
 
 const getQueryParams = (searchParams: URLSearchParams, keys: string[]) => {

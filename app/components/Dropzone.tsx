@@ -131,51 +131,45 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ onFilesAdded }) => {
   const handleSubmit = async () => {
     const uploadPromises = files.map(async file => {
       try {
-        console.log('file', file);
-        console.log(`Uploading file: ${file.name}, type: ${file.type}`);
-        
-        // Construct the URL for presigned URL request
-        const response = await fetch(`/api/photos/presign?fileName=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(file.type)}`);
-        console.log('response', response);
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching presigned URL: ${response.statusText}`);
-        }
+        // Log file details
+        console.log('Uploading file:', file);
   
-        const { presignedUrl } = await response.json();
-        console.log('presignedUrl', presignedUrl);
-  
-        // Upload the file to S3 using the presigned URL
-        await fetch(presignedUrl, {
-          method: 'PUT',
-          body: file,
+        // Create a fetch request directly for each file
+        const response = await fetch('/api/photos/puts3', {
+          method: 'POST',
           headers: {
             'Content-Type': file.type,
             'Content-Disposition': `attachment; filename="${file.name}"`,
           },
+          body: file,
         });
   
-        const imageUrl = presignedUrl.split('?')[0];
+        if (!response.ok) {
+          throw new Error(`Error uploading file: ${response.statusText}`);
+        }
   
-        // Store the file metadata in the database
-        const uploadResponse = await fetch('/api/photos/upload', {
+        const { url: imageUrl } = await response.json();
+  
+        // Extract the key from the URL
+        const key = new URL(imageUrl).pathname.substring(1);
+        console.log('key', key)
+  
+        // Store file metadata in the database
+        await fetch('/api/photos/upload', {
           method: 'POST',
           body: JSON.stringify({
             id: file.name,
             order: files.indexOf(file),
-            imageUrl,
+            key,
             description: file.description,
           }),
           headers: {
             'Content-Type': 'application/json',
           },
         });
-  
-        const uploadResult = await uploadResponse.json();
-        console.log('Upload result:', uploadResult);
       } catch (error) {
         console.error('Error uploading file:', error);
-        throw error; // Re-throw error to be caught in Promise.all
+        throw error;
       }
     });
   
@@ -183,10 +177,12 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ onFilesAdded }) => {
       await Promise.all(uploadPromises);
       alert('Files uploaded successfully!');
     } catch (error) {
-      console.error('Error uploading files:', error);
-      alert('Failed to upload files: ' + (error as Error).message);
+      alert('Failed to upload files: ' + error);
     }
   };
+  
+  
+  
   
   // Define accept as a string or array of strings
   const accept = {

@@ -1,12 +1,19 @@
-# SST x Next.js Deploy
-- Link: https://didd5wba1hnye.cloudfront.net/
+# Photo Gallery App (SST x Next.js)
+A serverlessly deployed photo gallery app with Next.js and SST deployed to AWS.
 
-Serverless Components is basically dead after next v9: https://github.com/serverless-nextjs/serverless-next.js/issues/2607
+| ![Demo1](./assets/Demo1.png) | ![Demo2](./assets/Demo2.png) |
+|:----------------------------:|:----------------------------:|
 
-So what are the options?
-- sst.dev which use `open-next` to build the app and make it compatible with aws lambda, it also support app router.
+* 🔒 Authentication: Amazon Cognito
+* 🏗️ IaC Pipeline: SST
+* 💾 Database: Amazon DynamoDB
+* 🪣 Bucket: Amazon S3
+* 🔊 Serverless Functions: AWS Lambda
+* 🖥️ Hosting: Amazon S3 + Amazon CloudFront
 
-This guide walks through "Use Next.js with SST": https://docs.sst.dev/start/nextjs
+Link: https://didd5wba1hnye.cloudfront.net/
+
+
 
 ## Step 1: Initialize SST in the root of the new Next.js project:
 ```bash
@@ -114,10 +121,113 @@ Require stack:
 ...
 ```
 
+## AWS IAM Policy Permissions List:
 
+This is an exhaustive list:
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "acm:DescribeCertificate",
+                "acm:ListCertificates",
+                "acm:RequestCertificate",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:CreateStack",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:DeleteChangeSet",
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResource",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:DescribeStacks",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:GetTemplate",
+                "cloudformation:ListStackResources",
+                "cloudformation:UpdateStack",
+                "cloudformation:ValidateTemplate",
+                "cloudfront:CreateCloudFrontOriginAccessIdentity",
+                "cloudfront:CreateDistribution",
+                "cloudfront:CreateInvalidation",
+                "cloudfront:GetDistribution",
+                "cloudfront:GetDistributionConfig",
+                "cloudfront:ListCloudFrontOriginAccessIdentities",
+                "cloudfront:ListDistributions",
+                "cloudfront:ListDistributionsByLambdaFunction",
+                "cloudfront:ListDistributionsByWebACLId",
+                "cloudfront:ListFieldLevelEncryptionConfigs",
+                "cloudfront:ListFieldLevelEncryptionProfiles",
+                "cloudfront:ListInvalidations",
+                "cloudfront:ListPublicKeys",
+                "cloudfront:ListStreamingDistributions",
+                "cloudfront:UpdateDistribution",
+                "cloudfront:TagResource",
+                "cloudfront:UntagResource",
+                "cloudfront:ListTagsForResource",
+                "dynamodb:CreateTable",
+                "dynamodb:DeleteTable",
+                "dynamodb:DescribeTable",
+                "dynamodb:ListTables",
+                "dynamodb:UpdateTable",
+                "iam:AttachRolePolicy",
+                "iam:CreateRole",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteRole",
+                "iam:DeleteRolePolicy",
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:PutRolePolicy",
+                "iam:UpdateAssumeRolePolicy",
+                "lambda:AddPermission",
+                "lambda:CreateFunction",
+                "lambda:DeleteFunction",
+                "lambda:GetFunction",
+                "lambda:GetFunctionConfiguration",
+                "lambda:ListEventSourceMappings",
+                "lambda:ListFunctions",
+                "lambda:ListTags",
+                "lambda:PublishVersion",
+                "lambda:RemovePermission",
+                "lambda:TagResource",
+                "lambda:UntagResource",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "route53:ChangeResourceRecordSets",
+                "route53:ListHostedZonesByName",
+                "route53:ListResourceRecordSets",
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetBucketLocation",
+                "s3:GetBucketPolicy",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutAccelerateConfiguration",
+                "s3:PutBucketPolicy",
+                "s3:PutBucketTagging",
+                "s3:PutObject",
+                "ssm:GetParameter",
+                "sqs:CreateQueue",
+                "sqs:DeleteQueue",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
 
 
 # ❌ Serverless Framework Components - Did not work....
+Serverless Components is basically dead after next v9: https://github.com/serverless-nextjs/serverless-next.js/issues/2607
+
+So what are the options?
+- sst.dev which use `open-next` to build the app and make it compatible with aws lambda, it also support app router.
+
+This guide walks through "Use Next.js with SST": https://docs.sst.dev/start/nextjs
 
 Tried to install serverless components cli but it did not upload: https://github.com/serverless-nextjs/serverless-next.js/issues/2320
 

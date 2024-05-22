@@ -2,13 +2,7 @@
 import React, { useState } from 'react';
 
 const SSTUpload: React.FC = () => {
-  const [url, setUrl] = useState<string>('');
-
-  const fetchPresignedUrl = async () => {
-    const response = await fetch('/api/presigned-url');
-    const data = await response.json();
-    setUrl(data.url);
-  };
+  const [fileUrl, setFileUrl] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,19 +11,19 @@ const SSTUpload: React.FC = () => {
     const file = fileInput.files?.[0];
 
     if (file) {
-      await fetchPresignedUrl();
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const response = await fetch(url, {
-        body: file,
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-          'Content-Disposition': `attachment; filename="${file.name}"`,
-        },
+      const response = await fetch('/api/presigned-url', {
+        method: 'POST',
+        body: formData,
       });
 
       if (response.ok) {
-        window.location.href = response.url.split('?')[0];
+        const data = await response.json();
+        setFileUrl(data.url);
+        // Remove the navigation line
+        // window.location.href = data.url;
       } else {
         console.error('File upload failed');
       }
@@ -38,12 +32,15 @@ const SSTUpload: React.FC = () => {
 
   return (
     <main>
-      <h1>Testing upload from SST</h1>
-      <br></br>
+      <h1>Testing upload to S3 without presigned URL</h1>
+      <br />
       <form onSubmit={handleSubmit}>
         <input name="file" type="file" accept="image/png, image/jpeg" required />
         <button type="submit">Upload</button>
       </form>
+      {fileUrl && (
+        <p>File uploaded successfully: <a href={fileUrl} target="_blank" rel="noopener noreferrer">{fileUrl}</a></p>
+      )}
     </main>
   );
 };
