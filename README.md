@@ -1,4 +1,4 @@
-# Photo Gallery App (SST x Next.js)
+# Photo Gallery App (SST x Next.js) 
 A serverlessly deployed photo gallery app with Next.js and SST deployed to AWS.
 
 | ![Demo1](./assets/Demo1.png) | ![Demo2](./assets/Demo2.png) |
